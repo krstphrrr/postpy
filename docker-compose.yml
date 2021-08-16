@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  postpy:
+    build: 
+      context: .
+      dockerfile: src/docker_image/Dockerfile
+    ports:
+      - 3001:5000
+    container_name: postpy
+# winpty docker container run -it postpy_postpy for single container
+

@@ -27,7 +27,7 @@ class db:
                 self.str_1 = SimpleConnectionPool(minconn=1,maxconn=10,**self.params)
                 self.str = self.str_1.getconn()
 
-def config(filename='src/utils/database.ini', section='postgresql'):
+def config(filename='src/util/database.ini', section='postgresql'):
     """
     Uses the configpaser module to read .ini and return a dictionary of
     credentials

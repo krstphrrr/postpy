@@ -11,6 +11,7 @@ WORKDIR /usr/src
 COPY requirements.txt .
 
 ENV FLASK_APP=src/index
+ENV FLASK_ENV=development
 
 RUN pip3 install --no-cache-dir -r requirements.txt
 

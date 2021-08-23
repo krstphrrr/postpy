@@ -56,6 +56,9 @@ def returnFields(which_map, df = None):
         """
         
         poly = gpd.GeoDataFrame.from_postgis(f'select * from gis.{maps[which_map]}', engine_conn_string("postgresql"), geom_col='geom')
+        points = gpd.GeoDataFrame.from_postgis('select * from "dataHeader"', engine_conn_string("postgresql"), geom_col='wkb_geometry')
+        dbjoin = gpd.sjoin(poly,points, how="inner", op="intersects")
+
         # test for df.pk and/or df.geometry
         # join 
         # return df with fields

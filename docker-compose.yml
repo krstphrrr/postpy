@@ -7,5 +7,7 @@ services:
     ports:
       - 3001:5000
     container_name: postpy
+    volumes:
+      - ./src:/usr/src:cached
 # winpty docker container run -it postpy_postpy for single container
 

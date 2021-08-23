@@ -13,12 +13,15 @@ def hello_world():
 
 
 @app.route('/', methods=['POST'])
+
+
 def json_example():
     """ UNDER DEV """
+    print("starting...")
     request_data = request.get_json()
     
     tmp = controller(request_data)
-    print(tmp.checked.info(), flush=True)
+    print(tmp, flush=True)
 
     return "ok"
 

@@ -2,6 +2,14 @@ from src.util.tools import engine_conn_string
 import pandas as pd
 import geopandas as gpd
 
+"""
+select * from 
+(select geo.mlra_name, dh."PrimaryKey"
+from gis.mlra_v42_wgs84 as geo
+join public."dataHeader" as dh 
+on ST_WITHIN(dh.wkb_geometry, geo.geom));
+"""
+
 def returnFields(which_map, df = None):
     """
     utility function to add data from fields produced by a spatial join, 

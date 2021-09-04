@@ -1,6 +1,8 @@
+from pandas.core.frame import DataFrame
 from src.util.tools import engine_conn_string
 import pandas as pd
 import geopandas as gpd
+import logging
 
 """
 select * from 
@@ -10,64 +12,48 @@ join public."dataHeader" as dh
 on ST_WITHIN(dh.wkb_geometry, geo.geom));
 """
 
-def returnFields(which_map, df = None):
+def mlra()-> gpd.GeoDataFrame:
+    """ queries the mlra table into a geopandas dataframe
     """
-    utility function to add data from fields produced by a spatial join, 
-    to datasets incoming for ingestion.
+    try:
+        tmp = gpd.GeoDataFrame.from_postgis('select mlrarsym, mlra_name, geom from gis.mlra_v42_wgs84', 
+                engine_conn_string("postgresql"), 
+                geom_col='geom')
+        return tmp
+    except Exception as e:
+        logging.error(e)
 
+def header_pk_geometry(dataframe:pd.DataFrame) -> gpd.GeoDataFrame :
+    """ spatial join between geoindicators and select fields in
+    dataheader(primary key and wkb_geometry) to make geoindicators
+    spatially explicit.
+    
+    PARAMS:
+    dataframe: pandas dataframe. original unmodified dataframe
     """
-    maps = {
-        "mlra":"mlra_v42_wgs84",
-        "ecolevel1":"us_eco_level_4",
-        "ecolevel2":"us_eco_level_4",
-        "ecolevel3":"us_eco_level_4",
-        "ecolevel4":"us_eco_level_4",
-        "ecolevels":"us_eco_level_4"
-    }
-    which_field= {
-        "mlra":"mlra_name",
-        "ecolevel1":"na_l1name",
-        "ecolevel2":"na_l2name",
-        "ecolevel3":"us_l3name",
-        "ecolevel4":"us_l4name",
-        "ecolevels":""
-    }
-    result_set = {
-    "mlra":["PrimaryKey", which_field[which_map]],
-    "ecolevel1":["PrimaryKey",which_field[which_map]],
-    "ecolevel2":["PrimaryKey",which_field[which_map]],
-    "ecolevel3":["PrimaryKey",which_field[which_map]],
-    "ecolevel4":["PrimaryKey",which_field[which_map]],
-    "ecolevels":["PrimaryKey",
-                  which_field["ecolevel1"],
-                  which_field["ecolevel2"],
-                  which_field["ecolevel3"],
-                  which_field["ecolevel4"]]
-    }
-    if df is None:
-        """
-        returns a datafrane with all the pk's currently in header + the field data corresponding 
-        to ecoregion level or mlra. useful for adding the fields to already existing pg data or
-        debugging.
+    try:
+        geoms = gpd.GeoDataFrame.from_postgis("select \"PrimaryKey\",wkb_geometry from public.\"dataHeader\";",eng, geom_col="wkb_geometry")
+        fin = geoms.merge(dataframe, on="PrimaryKey")
+        return fin
+    except Exception as e:
+        logging.error(e)
 
-        """
-        poly = gpd.GeoDataFrame.from_postgis(f'select * from gis.{maps[which_map]}', engine_conn_string("postgresql"), geom_col='geom')
-        points = gpd.GeoDataFrame.from_postgis('select * from "dataHeader"', engine_conn_string("postgresql"), geom_col='wkb_geometry')
-        join = gpd.sjoin(poly,points, how="inner", op="intersects")
-        return join.loc[:,result_set[which_map]]
+def geoindicators_mlra( 
+    spatial_geoindicators:gpd.GeoDataFrame, 
+    mlra_df:gpd.GeoDataFrame, 
+    columns_df:pd.DataFrame) -> gpd.GeoDataFrame:
+    """ spatial join between spatially explicit geoindicators
+    and mlra. returns geoindicators + mlrarsym and mlra_name fields
+    requires geoIndicators primary keys to be already present 
+    on the DB. 
 
-    elif df is not None and isinstance(df,pd.DataFrame):
-        """
-        if supplied dataframe with primarykeys OR/AND a geometry field, 
-        it will return a dataframe with the additional fields: na_l1name, 
-        na_l2name, us_l3name, us_l4name and mlra. 
-        """
-        
-        poly = gpd.GeoDataFrame.from_postgis(f'select * from gis.{maps[which_map]}', engine_conn_string("postgresql"), geom_col='geom')
-        points = gpd.GeoDataFrame.from_postgis('select * from "dataHeader"', engine_conn_string("postgresql"), geom_col='wkb_geometry')
-        dbjoin = gpd.sjoin(poly,points, how="inner", op="intersects")
+    PARAMS:
+    spatial_geoindicators: geoPandas dataframe. product of header_pk_geometry()
+    mlra_df: geoPandas dataframe. product of mlra()
+    columns_df: pandas dataframe. original unmodified dataframe 
+    """
+    cols = [i for i in columns_df.columns]
+    cols.extend(['mlrarsym','mlra_name'])
+    final = gpd.sjoin(spatial_geoindicators, mlra_df, op="intersects")
+    return final.loc[:,cols]
 
-        # test for df.pk and/or df.geometry
-        # join 
-        # return df with fields
-        

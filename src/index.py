@@ -25,14 +25,11 @@ def json_example(tableid):
         logging.info("data goes into the controller...")
         tmp = controller(request_data)
         logging.info(tmp)
+        return 'ok'
+
     except Exception as e:
-        logging.error(e, flush=True)
-
+        logging.error(e)
     
-    # tmp = controller(request_data)
-    # print(request_data, flush=True)
-    
-
-    return "ok"
+    return "failed"
 
 app.run(debug=True)

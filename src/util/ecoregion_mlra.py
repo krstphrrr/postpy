@@ -62,7 +62,7 @@ def geoindicators_mlra(
     return final.loc[:,cols]
 
 def ecoregions():
-    """
+    """ queries the ecoregions table into a geopandas dataframe
     """
     try:
         us = gpd.GeoDataFrame.from_postgis('select * from gis.us_eco_level_4',
@@ -82,6 +82,16 @@ def geoindicators_ecoregions(
     spatial_geoindicators:gpd.GeoDataFrame, 
     ecoregions_df:gpd.GeoDataFrame, 
     columns_df:pd.DataFrame) -> gpd.GeoDataFrame:
+    """ spatial join between spatially explicit geoindicators
+    and ecoregions. returns geoindicators + ecoregions fields
+    requires geoIndicators primary keys. requires geometry 
+    should follow geoindicators_mlra
+
+    PARAMS:
+    spatial_geoindicators: geoPandas dataframe. product of header_pk_geometry()
+    ecoregions_df: geoPandas dataframe. product of ecoregions()
+    columns_df: pandas dataframe. original unmodified dataframe 
+    """
 
     cols = [i for i in columns_df.columns]
     cols.extend(['wkb_geometry','mlrarsym','mlra_name','us_l4name', 'us_l3name', 'na_l2name', 'na_l1name'])
